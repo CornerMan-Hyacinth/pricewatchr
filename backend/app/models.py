@@ -1,7 +1,7 @@
-from sqlalchemy import String, Float, ForeignKey, DateTime, func, Index, UniqueConstraint
+from sqlalchemy import Boolean, String, Float, ForeignKey, DateTime, func, Index, UniqueConstraint
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import UUID
-from datetime import datetime, timezone
+from datetime import datetime
 from uuid import uuid4
 from typing import List, Optional
 from app.database import Base
@@ -16,6 +16,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(String, index=True, unique=True, nullable=False)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     hashed_password: Mapped[str] = mapped_column(String, nullable=False)
+    email_verified: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
@@ -136,3 +137,24 @@ class PriceHistory(Base):
         Index("ix_price_history_product_url_recorded", "product_url_id", "recorded_at"),
         UniqueConstraint("product_url_id", "recorded_at", name="uq_price_once_per_url_time"),
     )
+
+
+#---------- VERIFICATION CODE MODEL --------------------------
+class VerificationCode(Base):
+    __tablename__ = "verification_codes"
+    
+    id: Mapped[UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, index=True, default=uuid4, nullable=False
+    )
+    user_id: Mapped[UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    code: Mapped[str] = mapped_column(String(6), nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    user: Mapped["User"] = relationship("User")

@@ -11,13 +11,13 @@ class UserCreate(UserBase):
     
 class UserUpdateEmail(BaseModel):
     email: EmailStr
-    password: str
     
 class UserUpdateName(BaseModel):
     name: str
     
-class UserInDB(UserBase):
+class UserOut(UserBase):
     id: UUID
+    email_verified: bool
     created_at: datetime
 
     model_config = {
