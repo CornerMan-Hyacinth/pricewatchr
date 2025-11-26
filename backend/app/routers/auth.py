@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.database import get_db
+from app.enums import UserRole
 from app.models import User
 from app.schemas import UserCreate, UserOut, ResponseModel
 from app.schemas.auth import (
@@ -34,7 +35,12 @@ async def register(user: UserCreate, db: AsyncSession = Depends(get_db)):
             message="Email already taken"
         )
         
-    new_user = User(email=user.email, name=user.name, hashed_password=hash_password(user.password))
+    new_user = User(
+        email=user.email,
+        name=user.name,
+        hashed_password=hash_password(user.password),
+        role=UserRole.USER
+    )
     db.add(new_user)
     await db.commit()
     await db.refresh(new_user)
@@ -46,7 +52,8 @@ async def register(user: UserCreate, db: AsyncSession = Depends(get_db)):
             id=new_user.id,
             email=new_user.email,
             name=new_user.name,
-            created_at=new_user.created_at
+            created_at=new_user.created_at,
+            role=new_user.role
         )
     )
     

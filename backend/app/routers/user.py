@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, status
+from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.database import get_db
 from app.models import User
-from app.schemas import UserUpdateEmail, UserUpdateName, UserOut, ResponseModel
+from app.schemas import UserUpdateEmail, UserUpdate, UserOut, ResponseModel
 from app.utils.core.auth import create_access_token
 from app.utils.core.deps import get_current_user
 from app.utils.response import success_response, error_response
@@ -15,21 +16,30 @@ router = APIRouter(prefix="/me", tags=["Profile"])
 async def get_profile(
     db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)
 ):
-    result = await db.execute(select(User).where(User.id == current_user.id))
-    user = result.scalar_one_or_none()
-    if not user:
-        return error_response(
-            status_code=status.HTTP_404_NOT_FOUND,
-            message="User not found"
-        )
-        
     return success_response(
         message="User retrieved successfully",
-        data=UserOut(id=user.id, email=user.email, name=user.name, created_at=user.created_at)
+        data=UserOut(current_user)
+    )
+    
+@router.patch("/", response_model=ResponseModel[UserOut])
+async def update_user(
+    payload: UserUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    for key, value in payload.model_dump(exclude_unset=True).items():
+        setattr(current_user, key, value)
+        
+    await db.commit()
+    await db.refresh(current_user)
+    
+    return success_response(
+        message="Name changed successfully",
+        data=UserOut.model_validate(current_user)
     )
     
 @router.patch("/email", response_model=ResponseModel[dict])
-async def change_email(
+async def update_user_email(
     data: UserUpdateEmail,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -59,17 +69,13 @@ async def change_email(
             "token_type": "bearer"
         }
     )
-    
-@router.patch("/name", response_model=ResponseModel[UserOut])
-async def change_name(
-    data: UserUpdateName,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    current_user.name = data.name
+
+@router.delete("/", response_model=ResponseModel[None], status_code=status.HTTP_204_NO_CONTENT)
+async def delete_user(db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
+    await db.execute(delete(User).where(User.id == current_user.id))
     await db.commit()
     
     return success_response(
-        message="Name changed successfully",
-        data=UserOut.model_validate(current_user)
+        status_code=status.HTTP_204_NO_CONTENT,
+        message="User deleted successfully"
     )

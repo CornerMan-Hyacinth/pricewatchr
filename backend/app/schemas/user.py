@@ -7,7 +7,6 @@ from app.enums import UserRole
 class UserBase(BaseModel):
     email: EmailStr
     name: str = Field(..., min_length=1, description="Must be at least 1 character long")
-    role: Optional[UserRole]
     
 class UserCreate(UserBase):
     password: str = Field(..., min_length=8, description="Must be at least 8 characters")
@@ -15,13 +14,15 @@ class UserCreate(UserBase):
 class UserUpdateEmail(BaseModel):
     email: EmailStr
     
-class UserUpdateName(BaseModel):
-    name: str
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
     role: Optional[UserRole] = None
+    email_verified: Optional[bool] = None
     
 class UserOut(UserBase):
     id: UUID
     email_verified: bool
+    role: UserRole
     created_at: datetime
 
     model_config = {
