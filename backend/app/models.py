@@ -150,11 +150,26 @@ class VerificationCode(Base):
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     code: Mapped[str] = mapped_column(String(6), nullable=False)
-    expires_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False
-    )
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
 
+    user: Mapped["User"] = relationship("User")
+    
+
+#----------- PASSWORD RESET TOKEN MODEL --------------------------
+class PasswordResetToken(Base):
+    __tablename__ = "password_reset_tokens"
+    
+    id: Mapped[UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, index=True, default=uuid4, nullable=False
+    )
+    user_id: Mapped[UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    token_hash: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    
     user: Mapped["User"] = relationship("User")
