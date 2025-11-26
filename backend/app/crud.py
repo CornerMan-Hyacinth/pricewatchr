@@ -66,8 +66,11 @@ async def delete_product_url(db: AsyncSession, pu_id: UUID) -> bool:
     
 
 #------ PRODUCT CRUD ------
-async def create_product(db: AsyncSession, data: ProductCreate) -> ProductInDB:
-    new_product = Product(**data.model_dump())
+async def create_product(db: AsyncSession, data: ProductCreate, user_id: UUID) -> ProductInDB:
+    product_dict = data.model_dump()
+    product_dict["user_id"] = user_id
+    
+    new_product = Product(**product_dict)
     db.add(new_product)
     await db.commit()
     await db.refresh(new_product)

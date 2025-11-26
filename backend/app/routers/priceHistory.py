@@ -4,11 +4,17 @@ from typing import List
 from app import crud
 from app.database import get_db
 from app.schemas import PriceHistoryInDB, PriceHistoryCreate, ResponseModel
+from app.utils.core.deps import get_current_user
 from app.utils.response import success_response, error_response
 
 router = APIRouter(prefix="/price-history", tags=["Price History"])
 
-@router.post("/", response_model=ResponseModel[PriceHistoryInDB], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/",
+    response_model=ResponseModel[PriceHistoryInDB],
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(get_current_user)]
+)
 async def create_price_history(data: PriceHistoryCreate, db: AsyncSession = Depends(get_db)):
     new_price_history = await crud.create_price_history(db=db, data=data)
     return success_response(
@@ -17,7 +23,11 @@ async def create_price_history(data: PriceHistoryCreate, db: AsyncSession = Depe
         status_code=status.HTTP_201_CREATED
     )
     
-@router.get("/product/{product_id}", response_model=ResponseModel[List[PriceHistoryInDB]])
+@router.get(
+    "/product/{product_id}",
+    response_model=ResponseModel[List[PriceHistoryInDB]],
+    dependencies=[Depends(get_current_user)]
+)
 async def get_price_history_by_product(product_id: str, db: AsyncSession = Depends(get_db)):
     price_history_records = await crud.get_price_history_by_product(db=db, product_id=product_id)
     return success_response(
@@ -25,7 +35,11 @@ async def get_price_history_by_product(product_id: str, db: AsyncSession = Depen
         data=price_history_records
     )
     
-@router.get("/{ph_id}", response_model=ResponseModel[PriceHistoryInDB])
+@router.get(
+    "/{ph_id}",
+    response_model=ResponseModel[PriceHistoryInDB],
+    dependencies=[Depends(get_current_user)]
+    )
 async def get_price_history(ph_id: str, db: AsyncSession = Depends(get_db)):
     price_history = await crud.get_price_history_by_id(db=db, ph_id=ph_id)
     if not price_history:
@@ -39,7 +53,11 @@ async def get_price_history(ph_id: str, db: AsyncSession = Depends(get_db)):
         data=price_history
     )
     
-@router.delete("/{ph_id}", response_model=ResponseModel[None])
+@router.delete(
+    "/{ph_id}",
+    response_model=ResponseModel[None],
+    dependencies=[Depends(get_current_user)]
+)
 async def delete_price_history(ph_id: str, db: AsyncSession = Depends(get_db)):
     deleted = await crud.delete_price_history(db=db, ph_id=ph_id)
     if not deleted:

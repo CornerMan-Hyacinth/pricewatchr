@@ -4,7 +4,6 @@ from uuid import UUID
 from datetime import datetime
 
 class ProductBase(BaseModel):
-    user_id: UUID
     name: str
     target_price: Optional[float] = None
     
@@ -27,6 +26,7 @@ class ProductUpdate(BaseModel):
     
 class ProductInDB(ProductBase):
     id: UUID
+    user_id: UUID
     current_price: Optional[float] = None
     last_checked: Optional[datetime] = None
     added_at: datetime

@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.database import get_db
+from app.enums import UserRole
 from app.models import User
 from app.schemas import ResponseModel, ResponseStatus
 from app.utils.core.auth import SECRET_KEY, ALGORITHM
@@ -32,3 +33,11 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession
         
     return user
     
+async def get_current_staff(current_user: User = Depends(get_current_user)) -> User:
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only staff can perform this action"
+        )
+        
+    return current_user

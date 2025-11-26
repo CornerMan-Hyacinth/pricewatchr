@@ -1,10 +1,13 @@
-from sqlalchemy import Boolean, String, Float, ForeignKey, DateTime, func, Index, UniqueConstraint
+from sqlalchemy import (
+    Boolean, String, Float, ForeignKey, DateTime, func, Index, UniqueConstraint, Enum as SqlEnum
+)
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import UUID
 from datetime import datetime
 from uuid import uuid4
 from typing import List, Optional
 from app.database import Base
+from app.enums import UserRole
 
 #----- USER MODEL --------------------------------
 class User(Base):
@@ -17,6 +20,7 @@ class User(Base):
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     hashed_password: Mapped[str] = mapped_column(String, nullable=False)
     email_verified: Mapped[bool] = mapped_column(Boolean, default=False)
+    role: Mapped[UserRole] = mapped_column(SqlEnum(UserRole), server_default=UserRole.USER, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

@@ -3,13 +3,20 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
 from app.crud import get_product_by_id
 from app.database import get_db
+from app.enums import UserRole
+from app.models import User
 from app.services.scrape_service import scrape_product, scrape_all_products
 from app.utils.response import success_response, error_response
+from app.utils.core.deps import get_current_user, get_current_staff
 from app.schemas.response import ResponseModel, ScrapeAllResponse, ScrapeProductResponse
 
 router = APIRouter(prefix="/scrape", tags=["Scraper"])
 
-@router.post("/all", response_model=ResponseModel[ScrapeAllResponse])
+@router.post(
+    "/all",
+    response_model=ResponseModel[ScrapeAllResponse],
+    dependencies=[Depends(get_current_staff)]
+)
 async def scrape_all(db: AsyncSession = Depends(get_db)):
     """Scrape prices for all products."""
     scraped_data = await scrape_all_products(db)
@@ -28,8 +35,14 @@ async def scrape_all(db: AsyncSession = Depends(get_db)):
         )
     )
     
-@router.post("/{product_id}", response_model=ResponseModel[ScrapeProductResponse])
-async def scrape_product(product_id: UUID, db: AsyncSession = Depends(get_db)):
+@router.post(
+    "/{product_id}", response_model=ResponseModel[ScrapeProductResponse]
+)
+async def scrape_product(
+    product_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     """Scrape price for a specific product by its ID."""
     
     product = await get_product_by_id(db, product_id)
@@ -38,6 +51,12 @@ async def scrape_product(product_id: UUID, db: AsyncSession = Depends(get_db)):
         return error_response(
             message="Product not found.",
             status_code=status.HTTP_404_NOT_FOUND
+        )
+        
+    if product.user_id != current_user.id and current_user.role != UserRole.ADMIN:
+        return error_response(
+            message="You do not have permission to perform this action",
+            status_code=status.HTTP_403_FORBIDDEN
         )
         
     scraped_prices = await scrape_product(db, product)
