@@ -15,9 +15,9 @@ from app.schemas.auth import (
     PasswordResetRequest,
     PasswordResetConfirm
 )
-from app.services.email_service import send_verification_email, send_password_reset_email
 from app.services.verification_service import create_verification_code, verify_code
 from app.services.password_reset_service import create_reset_token, validate_reset_token
+from app.tasks.email_task import send_verification_email_task, send_password_reset_email_task
 from app.utils.core.security import hash_password, verify_password
 from app.utils.core.auth import create_access_token
 from app.utils.core.deps import get_current_user
@@ -91,7 +91,7 @@ async def send_verification_code(
         )
         
     code = await create_verification_code(db=db, user_id=current_user.id)
-    background_tasks.addtask(send_verification_email, current_user.email, code, background_tasks)
+    send_verification_email_task.delay(current_user.email, code, current_user.name or "User")
     
     return EmailVerificationSendResponse(
         message="Verification code sent to your email",
@@ -167,12 +167,7 @@ async def send_reset_password_email(
         reset_token = await create_reset_token(db=db, user_id=user.id)
         reset_link = f"https://pricewatchr.vercel.app/reset-password?token={reset_token}"
         
-        background_tasks.add_task(
-            send_password_reset_email,
-            to=user.email,
-            reset_link=reset_link,
-            user_name=user.name or "User"
-        )
+        send_password_reset_email_task.delay(user.email, reset_link, user.name or "User")
         
     return success_response(message="If the email exists, a reset link has been sent")
 
