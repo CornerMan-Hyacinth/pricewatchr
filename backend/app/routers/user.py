@@ -10,9 +10,9 @@ from app.utils.core.auth import create_access_token
 from app.utils.core.deps import get_current_user
 from app.utils.response import success_response, error_response
 
-router = APIRouter(prefix="/me", tags=["Profile"])
+router = APIRouter(prefix="/users", tags=["Profile"])
 
-@router.get("/", response_model=ResponseModel[UserOut])
+@router.get("/me", response_model=ResponseModel[UserOut])
 async def get_profile(
     db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)
 ):
@@ -21,7 +21,7 @@ async def get_profile(
         data=UserOut(current_user)
     )
     
-@router.patch("/", response_model=ResponseModel[UserOut])
+@router.patch("/me", response_model=ResponseModel[UserOut])
 async def update_user(
     payload: UserUpdate,
     db: AsyncSession = Depends(get_db),
@@ -38,7 +38,7 @@ async def update_user(
         data=UserOut.model_validate(current_user)
     )
     
-@router.patch("/email", response_model=ResponseModel[dict])
+@router.patch("/me/email", response_model=ResponseModel[dict])
 async def update_user_email(
     data: UserUpdateEmail,
     db: AsyncSession = Depends(get_db),
@@ -70,7 +70,7 @@ async def update_user_email(
         }
     )
 
-@router.delete("/", response_model=ResponseModel[None], status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/me", response_model=ResponseModel[None], status_code=status.HTTP_204_NO_CONTENT)
 async def delete_user(db: AsyncSession = Depends(get_db), current_user: User = Depends(get_current_user)):
     await db.execute(delete(User).where(User.id == current_user.id))
     await db.commit()
