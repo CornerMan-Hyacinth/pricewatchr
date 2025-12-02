@@ -1,41 +1,40 @@
 "use client";
 
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { login } from "@/services/auth";
-import { useAuth } from "@/store/authStore";
+import { useForm } from "react-hook-form";
+import { toast, Toaster } from "sonner";
+import { z } from "zod";
+import { registerUser } from "@/services/auth";
+import Image from "next/image";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Toaster, toast } from "sonner";
-import Link from "next/link";
 import PriceWatchrLogo from "@/public/images/pricewatchr_logo_dark.png";
-import Image from "next/image";
 
 const schema = z.object({
+  name: z.string().min(1),
   email: z.email(),
   password: z.string().min(8),
 });
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm({
-    resolver: zodResolver(schema),
-  });
-
-  const setToken = useAuth((s) => s.setToken);
+  } = useForm({ resolver: zodResolver(schema) });
 
   const onSubmit = async (data: any) => {
     try {
-      const res = await login(data.email, data.password);
-      setToken(res.access_token);
-      toast.success("You have logged in successfully");
-      window.location.href = "/dashboard";
-    } catch (e) {
-      toast.error("Invalid credentials");
+      const res = await registerUser(data);
+      toast.success("Success! Check your email to verify your account.");
+    } catch (e: any) {
+      console.error(e);
+      if (e.response?.status === 400) {
+        toast.error("An account with this email already exists.");
+      } else {
+        toast.error("Registration failed. Please try again later.");
+      }
     }
   };
 
@@ -58,15 +57,20 @@ export default function LoginPage() {
         </div>
 
         <h2 className="text-xl font-medium text-center mb-4">
-          Sign in to continue
+          Welcome to PriceWatchr!
         </h2>
 
         <p className="text-black text-sm mb-8 text-center">
-          Don;t have an account?{" "}
-          <Link href={"/register"} className="font-bold underline">
-            Sign up
+          Already have an account?{" "}
+          <Link href={"/login"} className="font-bold underline">
+            Sign in
           </Link>
         </p>
+
+        <Input placeholder="Full name" {...register("name")} />
+        {errors.name && (
+          <p className="text-red-500 text-sm">{errors.name.message}</p>
+        )}
 
         <Input placeholder="Email" {...register("email")} />
         {errors.email && (
@@ -82,13 +86,21 @@ export default function LoginPage() {
           <p className="text-red-500 text-sm">{errors.password.message}</p>
         )}
 
-        <Link href={"/"} className="text-sm underline cursor-pointer">
-          Forgot password?
-        </Link>
-
         <Button type="submit" className="w-full mt-8">
-          Login
+          Sign up
         </Button>
+
+        <p className="text-black/50 text-xs text-center">
+          By signing up, you agree to our{" "}
+          <Link href={"/"} className="font-bold underline hover:text-black">
+            Terms
+          </Link>{" "}
+          and{" "}
+          <Link href={"/"} className="font-bold underline hover:text-black">
+            Privacy Policy
+          </Link>
+          .
+        </p>
       </form>
     </div>
   );
