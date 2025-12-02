@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, EmailStr, Field
 from typing import Literal
 
 class AuthResponse(BaseModel):
@@ -11,6 +11,7 @@ class EmailVerificationSendResponse(BaseModel):
     detail: Literal["verification_code_sent"]
 
 class EmailVerificationVerifyRequest(BaseModel):
+    email: EmailStr
     code: str  # 6-digit string like "813920"
 
 class PasswordChangeRequest(BaseModel):
@@ -18,7 +19,7 @@ class PasswordChangeRequest(BaseModel):
     new_password: str = Field(..., min_length=8, description="Must be at least 8 characters")
 
 class PasswordResetRequest(BaseModel):
-    email: str
+    email: EmailStr
 
 class PasswordResetConfirm(BaseModel):
     token: str = Field(..., description="Reset token from email")

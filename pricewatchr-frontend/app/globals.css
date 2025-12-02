@@ -120,3 +120,14 @@
     @apply bg-background text-foreground;
   }
 }
+
+.spinner-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 80vh;
+}
+
+.spinning-logo {
+  border-radius: 50%;
+}

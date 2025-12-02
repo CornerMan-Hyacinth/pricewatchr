@@ -67,6 +67,12 @@ async def login(form: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = 
             message="Invalid credentials"
         )
         
+    if not user.email_verified:
+        return error_response(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            message="Email not verified"
+        )
+        
     token = create_access_token({"sub": user.email})
     return AuthResponse(
         message="Logged in successfully",
@@ -80,18 +86,26 @@ async def login(form: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = 
     status_code=status.HTTP_200_OK
 )
 async def send_verification_code(
-    background_tasks: BackgroundTasks,
-    current_user: User = Depends(get_current_user),
+    email: str,
     db: AsyncSession = Depends(get_db)
 ):
-    if current_user.email_verified:
+    result = await db.execute(select(User).where(User.email == email))
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        return error_response(
+            status_code=status.HTTP_404_NOT_FOUND,
+            message="User not found"
+        )
+    
+    if user.email_verified:
         return EmailVerificationSendResponse(
             message="Email already verified",
             detail="verification_code_sent"
         )
         
-    code = await create_verification_code(db=db, user_id=current_user.id)
-    send_verification_email_task.delay(current_user.email, code, current_user.name or "User")
+    code = await create_verification_code(db=db, user_id=user.id)
+    send_verification_email_task.delay(user.email, code, user.name or "User")
     
     return EmailVerificationSendResponse(
         message="Verification code sent to your email",
@@ -105,27 +119,35 @@ async def send_verification_code(
 )
 async def verify_email_with_code(
     payload: EmailVerificationVerifyRequest,
-    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    if current_user.email_verified:
+    result = await db.execute(select(User).where(User.email == payload.email))
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        return error_response(
+            status_code=status.HTTP_404_NOT_FOUND,
+            message="User not found"
+        )
+    
+    if user.email_verified:
         return error_response(
             status_code=status.HTTP_400_BAD_REQUEST,
             message="Email already verified"
         )
         
-    if not await verify_code(db=db, user_id=current_user.id, code=payload.code):
+    if not await verify_code(db=db, user_id=user.id, code=payload.code):
         return error_response(
             status_code=status.HTTP_400_BAD_REQUEST,
             message="Invalid or expired verification code"
         )
         
     # Mark as verified
-    current_user.email_verified = True
+    user.email_verified = True
     await db.commit()
     
     # Return fresh token
-    new_token = create_access_token({"sub": current_user.email})
+    new_token = create_access_token({"sub": user.email})
     
     return AuthResponse(
         message="Email verified successfully",
@@ -165,7 +187,7 @@ async def send_reset_password_email(
     
     if user:
         reset_token = await create_reset_token(db=db, user_id=user.id)
-        reset_link = f"https://pricewatchr.vercel.app/reset-password?token={reset_token}"
+        reset_link = f"https://pricewatchr.vercel.app/reset-password/{reset_token}"
         
         send_password_reset_email_task.delay(user.email, reset_link, user.name or "User")
         

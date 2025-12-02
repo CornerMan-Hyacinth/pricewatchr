@@ -10,24 +10,47 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import PriceWatchrLogo from "@/public/images/pricewatchr_logo_dark.png";
+import { useRouter } from "next/navigation";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 
-const schema = z.object({
-  name: z.string().min(1),
-  email: z.email(),
-  password: z.string().min(8),
-});
+const schema = z
+  .object({
+    name: z.string().min(1),
+    email: z.email(),
+    password: z.string().min(8, "Password must be at least 8 characters long"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    error: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
+
+type RegisterFormData = z.infer<typeof schema>;
 
 export default function RegisterPage() {
+  const router = useRouter();
+
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm({ resolver: zodResolver(schema) });
+  } = useForm<RegisterFormData>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
+  });
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: RegisterFormData) => {
     try {
       const res = await registerUser(data);
       toast.success("Success! Check your email to verify your account.");
+      setTimeout(() => {
+        router.push("/auth/verify-email");
+      }, 3000);
     } catch (e: any) {
       console.error(e);
       if (e.response?.status === 400) {
@@ -77,13 +100,19 @@ export default function RegisterPage() {
           <p className="text-red-500 text-sm">{errors.email.message}</p>
         )}
 
-        <Input
-          type="password"
-          placeholder="Password"
-          {...register("password")}
-        />
+        <PasswordInput placeholder="Password" {...register("password")} />
         {errors.password && (
           <p className="text-red-500 text-sm">{errors.password.message}</p>
+        )}
+
+        <PasswordInput
+          placeholder="Confirm password"
+          {...register("confirmPassword")}
+        />
+        {errors.confirmPassword && (
+          <p className="text-red-500 text-sm">
+            {errors.confirmPassword.message}
+          </p>
         )}
 
         <Button type="submit" className="w-full mt-8">
