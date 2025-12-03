@@ -33,7 +33,7 @@ export default function RegisterPage() {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<RegisterFormData>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -115,8 +115,8 @@ export default function RegisterPage() {
           </p>
         )}
 
-        <Button type="submit" className="w-full mt-8">
-          Sign up
+        <Button type="submit" className="w-full mt-8" disabled={isSubmitting}>
+          {isSubmitting ? "Signing up..." : "Sign up"}
         </Button>
 
         <p className="text-black/50 text-xs text-center">

@@ -24,7 +24,7 @@ export default function LoginPage() {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<LoginFormData>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -52,7 +52,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
+    <main className="min-h-screen flex items-center justify-center">
       <Toaster position="bottom-right" richColors />
 
       <form
@@ -94,10 +94,10 @@ export default function LoginPage() {
           Forgot password?
         </Link>
 
-        <Button type="submit" className="w-full mt-8">
-          Login
+        <Button type="submit" className="w-full mt-8" disabled={isSubmitting}>
+          {isSubmitting ? "Signing in..." : "Sign in"}
         </Button>
       </form>
-    </div>
+    </main>
   );
 }
