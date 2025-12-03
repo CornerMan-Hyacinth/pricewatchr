@@ -9,6 +9,7 @@ from app.models import User
 from app.schemas import UserCreate, UserOut, ResponseModel
 from app.schemas.auth import (
     AuthResponse,
+    EmailVerificationSendRequest,
     EmailVerificationSendResponse,
     EmailVerificationVerifyRequest,
     PasswordChangeRequest,
@@ -86,10 +87,10 @@ async def login(form: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = 
     status_code=status.HTTP_200_OK
 )
 async def send_verification_code(
-    email: str,
+    payload: EmailVerificationSendRequest,
     db: AsyncSession = Depends(get_db)
 ):
-    result = await db.execute(select(User).where(User.email == email))
+    result = await db.execute(select(User).where(User.email == payload.email))
     user = result.scalar_one_or_none()
     
     if not user:

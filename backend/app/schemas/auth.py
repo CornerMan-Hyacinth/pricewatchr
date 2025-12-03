@@ -5,10 +5,14 @@ class AuthResponse(BaseModel):
     message: str
     access_token: str
     token_type: str = "bearer"
+    
+class EmailVerificationSendRequest(BaseModel):
+    email: EmailStr
 
 class EmailVerificationSendResponse(BaseModel):
     message: str
     detail: Literal["verification_code_sent"]
+
 
 class EmailVerificationVerifyRequest(BaseModel):
     email: EmailStr

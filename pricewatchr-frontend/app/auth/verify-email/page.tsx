@@ -66,7 +66,7 @@ export default function VerifyEmailPage() {
     setSendingOTP(true);
 
     try {
-      const data = await sendEmailVerificationCode(email);
+      const data = await sendEmailVerificationCode({ email });
       if (data.detail === "verification_code_sent") {
         if (data.message === "Email already verified") {
           toast(data.message, {

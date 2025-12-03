@@ -15,3 +15,8 @@ export interface AuthResponse {
   access_token: string;
   token_type: string;
 }
+
+export interface EmailVerificationSendResponse {
+  message: string;
+  detail: "verification_code_sent";
+}
