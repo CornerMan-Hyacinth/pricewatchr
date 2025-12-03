@@ -180,7 +180,6 @@ async def change_password(
 @router.post("/password/reset/request", response_model=ResponseModel[None])
 async def send_reset_password_email(
     payload: PasswordResetRequest,
-    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db)
 ):
     result = await db.execute(select(User).where(User.email.ilike(payload.email)))
