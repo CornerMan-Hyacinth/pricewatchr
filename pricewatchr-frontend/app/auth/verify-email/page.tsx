@@ -80,7 +80,7 @@ export default function VerifyEmailPage() {
           });
 
           setTimeout(() => {
-            router.push("/login");
+            router.push("/auth/login");
           }, 3000);
         } else {
           toast.success(data.message);
@@ -177,7 +177,7 @@ export default function VerifyEmailPage() {
         </div>
 
         <h2 className="text-xl font-medium text-center mb-4">
-          Sign in to continue
+          Verify your email
         </h2>
 
         <p className="text-base text-center text-gray-500 mb-8">
@@ -209,7 +209,7 @@ export default function VerifyEmailPage() {
                             <InputOTPSlot
                               key={i}
                               index={i}
-                              className="h-12 w-12"
+                              className="h-12 w-12 border-black/30"
                             />
                           )
                         )}

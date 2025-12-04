@@ -75,7 +75,7 @@ export default function LoginPage() {
 
         <p className="text-black text-sm mb-8 text-center">
           Don;t have an account?{" "}
-          <Link href={"/register"} className="font-bold underline">
+          <Link href={"/auth/register"} className="font-bold underline">
             Sign up
           </Link>
         </p>
@@ -90,7 +90,10 @@ export default function LoginPage() {
           <p className="text-red-500 text-sm">{errors.password.message}</p>
         )}
 
-        <Link href={"/"} className="text-sm underline cursor-pointer">
+        <Link
+          href={"/auth/forgot-password"}
+          className="text-sm underline cursor-pointer"
+        >
           Forgot password?
         </Link>
 

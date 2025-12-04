@@ -62,7 +62,7 @@ export default function ForgotPasswordPage() {
           <MoveLeft />
           <p className="text-black text-sm">
             Go back to{" "}
-            <Link href={"/login"} className="font-bold underline">
+            <Link href={"/auth/login"} className="font-bold underline">
               Sign in
             </Link>
           </p>
